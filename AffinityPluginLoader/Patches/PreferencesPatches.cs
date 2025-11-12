@@ -80,6 +80,33 @@ namespace AffinityPluginLoader.Patches
                     {
                         FileLog.Log($"Found Pages property with {pageList.Count} existing pages\n");
                         
+                        // Add a separator before the AffinityPluginLoader tab
+                        var serifAssembly = AppDomain.CurrentDomain.GetAssemblies()
+                            .FirstOrDefault(a => a.GetName().Name == "Serif.Affinity");
+                        
+                        if (serifAssembly != null)
+                        {
+                            var separatorType = serifAssembly.GetType("Serif.Affinity.UI.Dialogs.Preferences.PreferencesPageSeparator");
+                            if (separatorType != null)
+                            {
+                                var separator = Activator.CreateInstance(separatorType);
+                                
+                                // Set Index property for separator
+                                var indexProperty = separatorType.GetProperty("Index");
+                                if (indexProperty != null)
+                                {
+                                    indexProperty.SetValue(separator, pageList.Count);
+                                }
+                                
+                                pageList.Add(separator);
+                                FileLog.Log($"Added separator to preferences dialog\n");
+                            }
+                            else
+                            {
+                                FileLog.Log($"PreferencesPageSeparator type not found, skipping separator\n");
+                            }
+                        }
+                        
                         // Create plugins page using factory to avoid loading Serif.Affinity.dll early
                         var pluginsPage = PluginsPreferencesPageFactory.CreatePage();
                         
@@ -93,7 +120,7 @@ namespace AffinityPluginLoader.Patches
                             }
                             
                             pageList.Add(pluginsPage);
-                            FileLog.Log($"Added Plugins tab to preferences dialog\n");
+                            FileLog.Log($"Added AffinityPluginLoader tab to preferences dialog\n");
                         }
                     }
                     else

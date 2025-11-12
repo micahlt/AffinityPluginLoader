@@ -53,15 +53,6 @@ namespace AffinityPluginLoader.Patches
                     return;
                 }
                 
-                // Patch GetCurrentVersionString (used in update dialog)
-                var getCurrentVersionString = applicationType.GetMethod("GetCurrentVersionString", BindingFlags.Public | BindingFlags.Instance);
-                if (getCurrentVersionString != null)
-                {
-                    var postfix = typeof(LoaderPatches).GetMethod(nameof(GetCurrentVersionString_Postfix), BindingFlags.Static | BindingFlags.Public);
-                    _harmony.Patch(getCurrentVersionString, postfix: new HarmonyMethod(postfix));
-                    FileLog.Log($"Patched GetCurrentVersionString\n");
-                }
-                
                 // Patch GetCurrentVerboseVersionString (used in splash screen)
                 var getVerboseVersionString = applicationType.GetMethod("GetCurrentVerboseVersionString", BindingFlags.Public | BindingFlags.Instance);
                 if (getVerboseVersionString != null)
@@ -78,12 +69,6 @@ namespace AffinityPluginLoader.Patches
             {
                 FileLog.Log($"Failed to apply version patches: {ex.Message}\n{ex.StackTrace}\n");
             }
-        }
-
-        // Postfix for GetCurrentVersionString (update dialog)
-        public static void GetCurrentVersionString_Postfix(ref string __result)
-        {
-            __result = "AffinityPluginLoader 0.1.0";
         }
 
         // Postfix for GetCurrentVerboseVersionString (splash screen)

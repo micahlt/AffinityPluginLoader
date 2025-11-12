@@ -102,7 +102,7 @@ namespace AffinityPluginLoader.UI
                 var pageNameProperty = preferencesPageType.GetProperty("PageName");
                 if (pageNameProperty != null)
                 {
-                    pageNameProperty.SetValue(grid, "Plugins");
+                    pageNameProperty.SetValue(grid, "AffinityPluginLoader");
                 }
                 
                 HarmonyLib.FileLog.Log($"PluginsPreferencesPage created successfully\n");

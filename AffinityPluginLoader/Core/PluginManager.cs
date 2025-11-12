@@ -24,6 +24,22 @@ namespace AffinityPluginLoader.Core
 
             FileLog.Log($"PluginManager initializing...\n");
 
+            // Add AffinityPluginLoader itself as the first plugin
+            var loaderAssembly = Assembly.GetExecutingAssembly();
+            var loaderNameAttr = loaderAssembly.GetCustomAttribute<AssemblyTitleAttribute>();
+            var loaderVersionAttr = loaderAssembly.GetCustomAttribute<AssemblyFileVersionAttribute>();
+            var loaderCompanyAttr = loaderAssembly.GetCustomAttribute<AssemblyCompanyAttribute>();
+            
+            var loaderInfo = new PluginInfo
+            {
+                Name = loaderNameAttr?.Title ?? "AffinityPluginLoader",
+                Version = loaderVersionAttr?.Version ?? loaderAssembly.GetName().Version?.ToString() ?? "0.1.0",
+                Author = loaderCompanyAttr?.Company ?? "AffinityPluginLoader",
+                AssemblyName = loaderAssembly.FullName
+            };
+            _loadedPlugins.Add(loaderInfo);
+            FileLog.Log($"Added AffinityPluginLoader to plugin list: {loaderInfo.Name} v{loaderInfo.Version}\n");
+
             // Apply loader's own patches (version strings, preferences tab)
             Patches.LoaderPatches.ApplyPatches(harmony);
 
