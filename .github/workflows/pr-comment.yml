@@ -1,0 +1,59 @@
+name: PR Comment - Build Starting
+
+on:
+  workflow_run:
+    workflows: ["Build AffinityPluginLoader"]
+    types:
+      - in_progress
+
+jobs:
+  pr-comment-starting:
+    name: Update PR Comment (Build Starting)
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.event == 'pull_request'
+    permissions:
+      pull-requests: write
+    
+    steps:
+      - name: Get PR number from branch
+        id: pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_BRANCH: |-
+            ${{
+              (github.event.workflow_run.head_repository.owner.login != github.event.workflow_run.repository.owner.login)
+                && format('{0}:{1}', github.event.workflow_run.head_repository.owner.login, github.event.workflow_run.head_branch)
+                || github.event.workflow_run.head_branch
+            }}
+        run: |
+          PR_NUMBER=$(gh pr view "$PR_BRANCH" --repo ${{ github.repository }} --json number --jq '.number')
+          echo "number=$PR_NUMBER" >> $GITHUB_OUTPUT
+      
+      - name: Get commit info
+        id: commit
+        run: |
+          echo "short_sha=$(echo ${{ github.event.workflow_run.head_sha }} | cut -c1-7)" >> $GITHUB_OUTPUT
+          echo "run_id=${{ github.event.workflow_run.id }}" >> $GITHUB_OUTPUT
+
+      - name: Find existing comment
+        uses: peter-evans/find-comment@v3
+        id: find-comment
+        with:
+          issue-number: ${{ steps.pr.outputs.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: '<!-- affinitypluginloader-build-artifacts -->'
+
+      - name: Create or update PR comment with in-progress status
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ steps.find-comment.outputs.comment-id }}
+          issue-number: ${{ steps.pr.outputs.number }}
+          edit-mode: replace
+          body: |
+            <!-- affinitypluginloader-build-artifacts -->
+            ## ⏳ Build In Progress
+            
+            **Commit:** `${{ steps.commit.outputs.short_sha }}`
+            
+            Building artifacts... This comment will be updated with download links when the build completes.
+
