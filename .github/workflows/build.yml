@@ -144,21 +144,11 @@ jobs:
           cp AffinityPluginLoader/LICENSE package/affinitypluginloader/LICENSE
           cp README.md package/affinitypluginloader/README.md
 
-      - name: Create affinitypluginloader zip
-        working-directory: package/affinitypluginloader
-        run: |
-          zip -r ../../affinitypluginloader-${{ steps.commit.outputs.short_sha }}-x64.zip .
-
       - name: Create apl-winefix package structure
         run: |
           mkdir -p package/winefix/plugins
           cp build/winefix/WineFix.dll package/winefix/plugins/
           cp WineFix/LICENSE package/winefix/plugins/LICENSE
-
-      - name: Create apl-winefix zip
-        working-directory: package/winefix
-        run: |
-          zip -r ../../apl-winefix-${{ steps.commit.outputs.short_sha }}-x64.zip .
 
       - name: Create combined package structure
         run: |
@@ -169,28 +159,43 @@ jobs:
           cp build/pluginloader/0Harmony.dll package/combined/
           cp build/winefix/WineFix.dll package/combined/plugins/
 
-      - name: Create combined tar.xz
-        working-directory: package/combined
+      - name: Create release archives
         run: |
+          cd package/affinitypluginloader
+          zip -r ../../affinitypluginloader-${{ steps.commit.outputs.short_sha }}-x64.zip .
+          cd ../winefix
+          zip -r ../../apl-winefix-${{ steps.commit.outputs.short_sha }}-x64.zip .
+          cd ../combined
           tar -cJf ../../affinitypluginloader-plus-winefix-${{ steps.commit.outputs.short_sha }}-x64.tar.xz .
+          cd ../..
 
       - name: Upload affinitypluginloader package
         uses: actions/upload-artifact@v4
         with:
           name: affinitypluginloader-${{ steps.commit.outputs.short_sha }}-x64
-          path: affinitypluginloader-${{ steps.commit.outputs.short_sha }}-x64.zip
+          path: package/affinitypluginloader/
           if-no-files-found: error
 
       - name: Upload apl-winefix package
         uses: actions/upload-artifact@v4
         with:
           name: apl-winefix-${{ steps.commit.outputs.short_sha }}-x64
-          path: apl-winefix-${{ steps.commit.outputs.short_sha }}-x64.zip
+          path: package/winefix/
           if-no-files-found: error
 
-      - name: Upload combined package
+      - name: Upload combined package (tar.xz)
         uses: actions/upload-artifact@v4
         with:
           name: affinitypluginloader-plus-winefix-${{ steps.commit.outputs.short_sha }}-x64
           path: affinitypluginloader-plus-winefix-${{ steps.commit.outputs.short_sha }}-x64.tar.xz
+          if-no-files-found: error
+      
+      - name: Upload release archives
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-archives-${{ steps.commit.outputs.short_sha }}
+          path: |
+            affinitypluginloader-${{ steps.commit.outputs.short_sha }}-x64.zip
+            apl-winefix-${{ steps.commit.outputs.short_sha }}-x64.zip
+            affinitypluginloader-plus-winefix-${{ steps.commit.outputs.short_sha }}-x64.tar.xz
           if-no-files-found: error
