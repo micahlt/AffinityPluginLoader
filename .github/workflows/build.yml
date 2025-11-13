@@ -22,20 +22,24 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
     permissions:
-      contents: write
+      actions: write
     steps:
-      - name: Dispatch build-started event
-        uses: peter-evans/repository-dispatch@v3
+      - name: Trigger PR comment workflow
+        uses: actions/github-script@v7
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          event-type: build-started
-          client-payload: |
-            {
-              "pr_number": "${{ github.event.pull_request.number }}",
-              "head_sha": "${{ github.event.pull_request.head.sha }}",
-              "run_id": "${{ github.run_id }}",
-              "run_number": "${{ github.run_number }}"
-            }
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'pr-comment.yml',
+              ref: 'main',
+              inputs: {
+                pr_number: '${{ github.event.pull_request.number }}',
+                head_sha: '${{ github.event.pull_request.head.sha }}',
+                run_id: '${{ github.run_id }}',
+                run_number: '${{ github.run_number }}'
+              }
+            });
 
   # Build the native C++ bootstrap DLL
   build-bootstrap:
@@ -228,8 +232,7 @@ jobs:
     if: github.event_name == 'pull_request' && always()
     needs: [build-bootstrap, build-csharp, package]
     permissions:
-      contents: write
-      actions: read
+      actions: write
     steps:
       - name: Get last successful run
         id: last-success
@@ -255,18 +258,24 @@ jobs:
             return null;
           result-encoding: json
       
-      - name: Dispatch build-completed event
-        uses: peter-evans/repository-dispatch@v3
+      - name: Trigger PR comment complete workflow
+        uses: actions/github-script@v7
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          event-type: build-completed
-          client-payload: |
-            {
-              "pr_number": "${{ github.event.pull_request.number }}",
-              "head_sha": "${{ github.event.pull_request.head.sha }}",
-              "run_id": "${{ github.run_id }}",
-              "run_number": "${{ github.run_number }}",
-              "conclusion": "${{ needs.package.result }}",
-              "last_successful_run_id": "${{ steps.last-success.outputs.result != 'null' && fromJson(steps.last-success.outputs.result).run_id || '' }}",
-              "last_successful_commit_sha": "${{ steps.last-success.outputs.result != 'null' && fromJson(steps.last-success.outputs.result).commit_sha || '' }}"
-            }
+          script: |
+            const lastSuccess = ${{ steps.last-success.outputs.result || 'null' }};
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'pr-comment-complete.yml',
+              ref: 'main',
+              inputs: {
+                pr_number: '${{ github.event.pull_request.number }}',
+                head_sha: '${{ github.event.pull_request.head.sha }}',
+                run_id: '${{ github.run_id }}',
+                run_number: '${{ github.run_number }}',
+                conclusion: '${{ needs.package.result }}',
+                last_successful_run_id: lastSuccess ? lastSuccess.run_id : '',
+                last_successful_commit_sha: lastSuccess ? lastSuccess.commit_sha : ''
+              }
+            });
+

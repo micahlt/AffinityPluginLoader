@@ -1,12 +1,42 @@
 name: PR Comment - Build Complete
 
 on:
-  repository_dispatch:
-    types: [build-completed]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number'
+        required: true
+        type: string
+      head_sha:
+        description: 'Commit SHA'
+        required: true
+        type: string
+      run_id:
+        description: 'Build workflow run ID'
+        required: true
+        type: string
+      run_number:
+        description: 'Build workflow run number'
+        required: true
+        type: string
+      conclusion:
+        description: 'Build conclusion (success/failure)'
+        required: true
+        type: string
+      last_successful_run_id:
+        description: 'Last successful build run ID'
+        required: false
+        type: string
+        default: ''
+      last_successful_commit_sha:
+        description: 'Last successful build commit SHA'
+        required: false
+        type: string
+        default: ''
 
 # Cancel in-progress runs when a new workflow with the same group name is triggered
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.client_payload.pr_number }}
+  group: ${{ github.workflow }}-${{ inputs.pr_number }}
   cancel-in-progress: true
 
 jobs:
@@ -22,13 +52,13 @@ jobs:
       - name: Get PR and commit info
         id: pr-info
         run: |
-          echo "pr_number=${{ github.event.client_payload.pr_number }}" >> $GITHUB_OUTPUT
-          echo "head_sha=${{ github.event.client_payload.head_sha }}" >> $GITHUB_OUTPUT
-          echo "short_sha=$(echo ${{ github.event.client_payload.head_sha }} | cut -c1-7)" >> $GITHUB_OUTPUT
-          echo "run_id=${{ github.event.client_payload.run_id }}" >> $GITHUB_OUTPUT
-          echo "conclusion=${{ github.event.client_payload.conclusion }}" >> $GITHUB_OUTPUT
-          echo "last_success_run_id=${{ github.event.client_payload.last_successful_run_id }}" >> $GITHUB_OUTPUT
-          echo "last_success_sha=${{ github.event.client_payload.last_successful_commit_sha }}" >> $GITHUB_OUTPUT
+          echo "pr_number=${{ inputs.pr_number }}" >> $GITHUB_OUTPUT
+          echo "head_sha=${{ inputs.head_sha }}" >> $GITHUB_OUTPUT
+          echo "short_sha=$(echo ${{ inputs.head_sha }} | cut -c1-7)" >> $GITHUB_OUTPUT
+          echo "run_id=${{ inputs.run_id }}" >> $GITHUB_OUTPUT
+          echo "conclusion=${{ inputs.conclusion }}" >> $GITHUB_OUTPUT
+          echo "last_success_run_id=${{ inputs.last_successful_run_id }}" >> $GITHUB_OUTPUT
+          echo "last_success_sha=${{ inputs.last_successful_commit_sha }}" >> $GITHUB_OUTPUT
 
       - name: Find existing comment
         uses: peter-evans/find-comment@v3
