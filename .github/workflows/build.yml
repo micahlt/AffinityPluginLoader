@@ -167,6 +167,7 @@ jobs:
           zip -r ../../apl-winefix-${{ steps.commit.outputs.short_sha }}-x64.zip .
           cd ../combined
           tar -cJf ../../affinitypluginloader-plus-winefix-${{ steps.commit.outputs.short_sha }}-x64.tar.xz .
+          cp ../../affinitypluginloader-plus-winefix-${{ steps.commit.outputs.short_sha }}-x64.tar.xz ../../affinitypluginloader-plus-winefix-x64.tar.xz
           cd ../..
 
       - name: Upload affinitypluginloader package
@@ -186,8 +187,15 @@ jobs:
       - name: Upload combined package (tar.xz)
         uses: actions/upload-artifact@v4
         with:
-          name: affinitypluginloader-plus-winefix-${{ steps.commit.outputs.short_sha }}-x64
+          name: affinitypluginloader-plus-winefix-${{ steps.commit.outputs.short_sha }}-x64.tar.xz
           path: affinitypluginloader-plus-winefix-${{ steps.commit.outputs.short_sha }}-x64.tar.xz
+          if-no-files-found: error
+
+      - name: Upload combined package (normalized filename tar.xz)
+        uses: actions/upload-artifact@v4
+        with:
+          name: affinitypluginloader-plus-winefix-x64.tar.xz
+          path: affinitypluginloader-plus-winefix-x64.tar.xz
           if-no-files-found: error
       
       - name: Upload release archives
@@ -198,6 +206,7 @@ jobs:
             affinitypluginloader-${{ steps.commit.outputs.short_sha }}-x64.zip
             apl-winefix-${{ steps.commit.outputs.short_sha }}-x64.zip
             affinitypluginloader-plus-winefix-${{ steps.commit.outputs.short_sha }}-x64.tar.xz
+            affinitypluginloader-plus-winefix-x64.tar.xz
           if-no-files-found: error
 
   # Comment on PR with artifact links
@@ -239,7 +248,6 @@ jobs:
             
             - **[affinitypluginloader-${{ steps.commit.outputs.short_sha }}-x64.zip](https://nightly.link/${{ github.repository }}/actions/runs/${{ github.run_id }}/affinitypluginloader-${{ steps.commit.outputs.short_sha }}-x64.zip)** - Main loader package
             - **[apl-winefix-${{ steps.commit.outputs.short_sha }}-x64.zip](https://nightly.link/${{ github.repository }}/actions/runs/${{ github.run_id }}/apl-winefix-${{ steps.commit.outputs.short_sha }}-x64.zip)** - WineFix plugin  
-            - **[affinitypluginloader-plus-winefix-${{ steps.commit.outputs.short_sha }}-x64.zip](https://nightly.link/${{ github.repository }}/actions/runs/${{ github.run_id }}/affinitypluginloader-plus-winefix-${{ steps.commit.outputs.short_sha }}-x64.tar.xz)** - Combined package (tar.xz)
+            - **[affinitypluginloader-plus-winefix-${{ steps.commit.outputs.short_sha }}-x64.tar.xz.zip](https://nightly.link/${{ github.repository }}/actions/runs/${{ github.run_id }}/affinitypluginloader-plus-winefix-${{ steps.commit.outputs.short_sha }}-x64.tar.xz.zip)** - Combined package (tar.xz)
+            - **[affinitypluginloader-plus-winefix-x64.tar.xz.zip](https://nightly.link/${{ github.repository }}/actions/runs/${{ github.run_id }}/affinitypluginloader-plus-winefix-x64.tar.xz.zip)** - Combined package with normalized filename (tar.xz)
             - **[release-archives-${{ steps.commit.outputs.short_sha }}.zip](https://nightly.link/${{ github.repository }}/actions/runs/${{ github.run_id }}/release-archives-${{ steps.commit.outputs.short_sha }}.zip)** - All release archives
-            
-            > 💡 These are direct download links powered by [nightly.link](https://nightly.link). No authentication required!
